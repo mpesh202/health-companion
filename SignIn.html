@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Companion</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      body {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+      }
+
+      .auth-container {
+        max-width: 400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+
+      .auth-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+      }
+
+      .auth-logo {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .auth-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #1f2937;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #374151;
+        font-weight: 500;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.15s ease;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .form-error {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: none;
+      }
+
+      .btn {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background-color 0.15s ease;
+      }
+
+      .btn:hover {
+        background: #2563eb;
+      }
+
+      .btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .auth-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #6b7280;
+      }
+
+      .auth-footer a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+
+      .auth-footer a:hover {
+        text-decoration: underline;
+      }
+
+      .verification-code {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1rem 0;
+        justify-content: center;
+      }
+
+      .verification-code input {
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        font-size: 1.2rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+      }
+
+      .phone-input {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .phone-input select {
+        width: 80px;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        background: white;
+      }
+
+      .page {
+        display: none;
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+        margin-right: 0.5rem;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+      <div class="auth-container">
+        <div class="auth-logo">
+          <i
+            data-feather="heart"
+            style="width: 48px; height: 48px; color: #3b82f6"
+          ></i>
+        </div>
+        <div class="auth-card">
+          <h1 class="auth-title">Sign in to Health Companion</h1>
+          <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label class="form-label" for="loginPhone">Phone Number</label>
+              <div class="phone-input">
+                <select id="loginCountryCode">
+                  <option value="+254">+254</option>
+                  <option value="+255">+255</option>
+                  <option value="+256">+256</option>
+                </select>
+                <input
+                  type="tel"
+                  id="loginPhone"
+                  class="form-input"
+                  placeholder="712345678"
+                  required
+                />
+              </div>
+              <div class="form-error" id="loginPhoneError">
+                Please enter a valid phone number
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="loginPin">PIN</label>
+              <input
+                type="password"
+                id="loginPin"
+                class="form-input"
+                maxlength="4"
+                placeholder="Enter your 4-digit PIN"
+                required
+              />
+              <div class="form-error" id="loginPinError">
+                Please enter a valid 4-digit PIN
+              </div>
+            </div>
+            <button type="submit" class="btn" id="loginButton">Sign In</button>
+          </form>
+        </div>
+        <div class="auth-footer">
+          Don't have an account?
+          <a href="#" onclick="showPage('register')">Register now</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Page -->
+    <div id="registerPage" class="page">
+      <div class="auth-container">
+        <div class="auth-logo">
+          <i
+            data-feather="heart"
+            style="width: 48px; height: 48px; color: #3b82f6"
+          ></i>
+        </div>
+        <div class="auth-card">
+          <h1 class="auth-title">Create your account</h1>
+          <form id="registerForm" onsubmit="handleRegister(event)">
+            <div class="form-group">
+              <label class="form-label" for="registerName">Full Name</label>
+              <input
+                type="text"
+                id="registerName"
+                class="form-input"
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="registerId">National ID</label>
+              <input
+                type="text"
+                id="registerId"
+                class="form-input"
+                placeholder="Enter your ID number"
+                required
+              />
+              <div class="form-error" id="registerIdError">
+                Please enter a valid ID number
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="registerPhone">Phone Number</label>
+              <div class="phone-input">
+                <select id="registerCountryCode">
+                  <option value="+268">+268</option>
+                  <option value="+27">+27</option>
+                </select>
+                <input
+                  type="tel"
+                  id="registerPhone"
+                  class="form-input"
+                  placeholder="712345678"
+                  required
+                />
+              </div>
+              <div class="form-error" id="registerPhoneError">
+                Please enter a valid phone number
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="registerPin">Create PIN</label>
+              <input
+                type="password"
+                id="registerPin"
+                class="form-input"
+                maxlength="4"
+                placeholder="Create a 4-digit PIN"
+                required
+              />
+              <div class="form-error" id="registerPinError">
+                Please enter a 4-digit PIN
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="registerPinConfirm"
+                >Confirm PIN</label
+              >
+              <input
+                type="password"
+                id="registerPinConfirm"
+                class="form-input"
+                maxlength="4"
+                placeholder="Confirm your PIN"
+                required
+              />
+              <div class="form-error" id="registerPinConfirmError">
+                PINs do not match
+              </div>
+            </div>
+            <button type="submit" class="btn" id="registerButton">
+              Create Account
+            </button>
+          </form>
+        </div>
+        <div class="auth-footer">
+          Already have an account?
+          <a href="SignIn.html" onclick="showPage('login')">Sign in</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verification Page -->
+    <div id="verificationPage" class="page">
+      <div class="auth-container">
+        <div class="auth-logo">
+          <i
+            data-feather="shield"
+            style="width: 48px; height: 48px; color: #3b82f6"
+          ></i>
+        </div>
+        <div class="auth-card">
+          <h1 class="auth-title">Verify your phone</h1>
+          <p style="text-align: center; color: #6b7280; margin-bottom: 1.5rem">
+            We've sent a verification code to your phone number
+          </p>
+          <form id="verificationForm" onsubmit="handleVerification(event)">
+            <div class="verification-code">
+              <input
+                type="text"
+                maxlength="1"
+                class="verification-digit"
+                required
+              />
+              <input
+                type="text"
+                maxlength="1"
+                class="verification-digit"
+                required
+              />
+              <input
+                type="text"
+                maxlength="1"
+                class="verification-digit"
+                required
+              />
+              <input
+                type="text"
+                maxlength="1"
+                class="verification-digit"
+                required
+              />
+              <input
+                type="text"
+                maxlength="1"
+                class="verification-digit"
+                required
+              />
+              <input
+                type="text"
+                maxlength="1"
+                class="verification-digit"
+                required
+              />
+            </div>
+            <div class="form-error" id="verificationError">
+              Invalid verification code
+            </div>
+            <button type="submit" class="btn" id="verifyButton">
+              Verify Phone Number
+            </button>
+          </form>
+          <div style="text-align: center; margin-top: 1rem">
+            <span id="resendTimer" style="color: #6b7280"
+              >Resend code in 30s</span
+            >
+            <a
+              href="#"
+              id="resendLink"
+              style="display: none"
+              onclick="resendCode()"
+              >Resend code</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Feather Icons
+      feather.replace();
+
+      // Page Navigation
+      function showPage(pageId) {
+        document.querySelectorAll(".page").forEach((page) => {
+          page.classList.remove("active");
+        });
+        document.getElementById(pageId + "Page").classList.add("active");
+      }
+
+      // Form Validation
+      function validatePhone(phone) {
+        return /^\d{9}$/.test(phone);
+      }
+
+      function validateId(id) {
+        return /^\d{8}$/.test(id);
+      }
+
+      function validatePin(pin) {
+        return /^\d{4}$/.test(pin);
+      }
+
+      // Login Handler
+      async function handleLogin(event) {
+        event.preventDefault();
+        const countryCode = document.getElementById("loginCountryCode").value;
+        const phone = document.getElementById("loginPhone").value;
+        const pin = document.getElementById("loginPin").value;
+
+        // Reset errors
+        document.getElementById("loginPhoneError").style.display = "none";
+        document.getElementById("loginPinError").style.display = "none";
+
+        // Validate
+        let hasError = false;
+        if (!validatePhone(phone)) {
+          document.getElementById("loginPhoneError").style.display = "block";
+          hasError = true;
+        }
+        if (!validatePin(pin)) {
+          document.getElementById("loginPinError").style.display = "block";
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        // Show loading state
+        const button = document.getElementById("loginButton");
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>Signing in...';
+
+        try {
+          // Simulate API call
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+
+          // For demo, go to verification page
+          showPage("verification");
+          startResendTimer();
+        } catch (error) {
+          console.error("Login error:", error);
+        } finally {
+          button.disabled = false;
+          button.textContent = "Sign In";
+        }
+      }
+
+      // Registration Handler
+      async function handleRegister(event) {
+        event.preventDefault();
+        const name = document.getElementById("registerName").value;
+        const countryCode = document.getElementById(
+          "registerCountryCode"
+        ).value;
+        const phone = document.getElementById("registerPhone").value;
+        const id = document.getElementById("registerId").value;
+        const pin = document.getElementById("registerPin").value;
+        const pinConfirm = document.getElementById("registerPinConfirm").value;
+
+        // Reset errors
+        document.querySelectorAll(".form-error").forEach((error) => {
+          error.style.display = "none";
+        });
+
+        // Validate
+        let hasError = false;
+        if (!validatePhone(phone)) {
+          document.getElementById("registerPhoneError").style.display = "block";
+          hasError = true;
+        }
+        if (!validateId(id)) {
+          document.getElementById("registerIdError").style.display = "block";
+          hasError = true;
+        }
+        if (!validatePin(pin)) {
+          document.getElementById("registerPinError").style.display = "block";
+          hasError = true;
+        }
+        if (pin !== pinConfirm) {
+          document.getElementById("registerPinConfirmError").style.display =
+            "block";
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        // Show loading state
+        const button = document.getElementById("registerButton");
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>Creating account...';
+
+        try {
+          // Simulate API call
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+
+          // For demo, go to verification page
+          showPage("verification");
+          startResendTimer();
+        } catch (error) {
+          console.error("Registration error:", error);
+        } finally {
+          button.disabled = false;
+          button.textContent = "Create Account";
+        }
+
+        // Verification Handler
+        async function handleVerification(event) {
+          event.preventDefault();
+
+          // Get verification code
+          const digits = Array.from(
+            document.querySelectorAll(".verification-digit")
+          )
+            .map((input) => input.value)
+            .join("");
+
+          // Reset error
+          document.getElementById("verificationError").style.display = "none";
+
+          // Validate
+          if (digits.length !== 6 || !/^\d+$/.test(digits)) {
+            document.getElementById("verificationError").style.display =
+              "block";
+            return;
+          }
+
+          // Show loading state
+          const button = document.getElementById("verifyButton");
+          button.disabled = true;
+          button.innerHTML = '<span class="spinner"></span>Verifying...';
+
+          try {
+            // Simulate API call
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+
+            // For demo, just show success alert
+            alert("Verification successful! You can now access your account.");
+            // In a real app, you would redirect to the dashboard or home page
+          } catch (error) {
+            console.error("Verification error:", error);
+            document.getElementById("verificationError").style.display =
+              "block";
+          } finally {
+            button.disabled = false;
+            button.textContent = "Verify Phone Number";
+          }
+        }
+
+        // Verification Code Input Handler
+        document
+          .querySelectorAll(".verification-digit")
+          .forEach((input, index) => {
+            input.addEventListener("input", (e) => {
+              if (e.target.value) {
+                // Move to next input
+                const next = input.nextElementSibling;
+                if (next) {
+                  next.focus();
+                }
+              }
+            });
+
+            input.addEventListener("keydown", (e) => {
+              if (e.key === "Backspace" && !e.target.value) {
+                // Move to previous input
+                const prev = input.previousElementSibling;
+                if (prev) {
+                  prev.focus();
+                  prev.value = "";
+                }
+              }
+            });
+          });
+
+        // Resend Code Timer
+        let resendTimerId;
+        function startResendTimer() {
+          const timerSpan = document.getElementById("resendTimer");
+          const resendLink = document.getElementById("resendLink");
+          let seconds = 30;
+
+          timerSpan.style.display = "inline";
+          resendLink.style.display = "none";
+
+          resendTimerId = setInterval(() => {
+            seconds--;
+            timerSpan.textContent = `Resend code in ${seconds}s`;
+
+            if (seconds <= 0) {
+              clearInterval(resendTimerId);
+              timerSpan.style.display = "none";
+              resendLink.style.display = "inline";
+            }
+          }, 1000);
+        }
+
+        async function resendCode() {
+          const resendLink = document.getElementById("resendLink");
+          resendLink.style.display = "none";
+
+          try {
+            // Simulate API call
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            // Restart timer
+            startResendTimer();
+            alert("Verification code resent successfully!");
+          } catch (error) {
+            console.error("Resend error:", error);
+            resendLink.style.display = "inline";
+            alert("Failed to resend verification code. Please try again.");
+          }
+        }
+
+        // Clean up timer when navigating away from verification page
+        function cleanupVerificationPage() {
+          if (resendTimerId) {
+            clearInterval(resendTimerId);
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

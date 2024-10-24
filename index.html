@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Companion</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      body {
+        background-color: #f8f9fa;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        background: white;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav {
+        background: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav-button {
+        border: none;
+        background: none;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav-button.active {
+        color: #3b82f6;
+      }
+
+      .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin: 1rem 0;
+        padding: 1rem;
+      }
+
+      .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #1f2937;
+      }
+
+      .alert {
+        background: #dbeafe;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        color: #1e40af;
+      }
+
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        color: #4b5563;
+      }
+
+      .btn {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        margin: 0.5rem 0;
+      }
+
+      .btn-outline {
+        background: white;
+        color: #3b82f6;
+        border: 1px solid #3b82f6;
+      }
+
+      .page {
+        display: none;
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      .privacy-toggle {
+        border: none;
+        background: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .privacy-toggle:hover {
+        background: #f3f4f6;
+      }
+
+      .privacy-status {
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+
+      .sensitive-info {
+        display: none;
+      }
+
+      .show-sensitive .sensitive-info {
+        display: block;
+      }
+
+      .sensitive-placeholder {
+        display: block;
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      .show-sensitive .sensitive-placeholder {
+        display: none;
+      }
+
+      .privacy-banner {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 0.5rem;
+        text-align: center;
+        display: none;
+      }
+
+      .show-sensitive .privacy-banner {
+        display: block;
+      }
+
+      @media (max-width: 768px) {
+        .nav {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 0.5rem;
+        }
+
+        .container {
+          padding-bottom: 80px;
+        }
+      }
+      .alert {
+        background: #dbeafe;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        color: #1e40af;
+      }
+      .modal {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+      }
+      .pin-input {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin: 1rem 0;
+      }
+
+      .pin-digit {
+        width: 40px;
+        height: 40px;
+        border: 2px solid #3b82f6;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 1.2rem;
+        margin: 0 4px;
+      }
+
+      .pin-error {
+        color: #dc2626;
+        text-align: center;
+        margin-top: 0.5rem;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="privacy-banner">
+      <i
+        data-feather="alert-triangle"
+        style="width: 16px; height: 16px; display: inline"
+      ></i>
+      Showing sensitive information
+    </div>
+
+    <header class="header">
+      <h1>Health Companion</h1>
+      <button class="privacy-toggle" id="privacyToggle">
+        <i data-feather="lock"></i>
+        <span class="privacy-status">Show sensitive info</span>
+      </button>
+
+      <div class="modal-overlay" id="pinModal">
+        <div class="modal">
+          <h2 style="text-align: center; margin-bottom: 1rem">Enter PIN</h2>
+          <div class="pin-input">
+            <input type="password" maxlength="1" class="pin-digit" />
+            <input type="password" maxlength="1" class="pin-digit" />
+            <input type="password" maxlength="1" class="pin-digit" />
+            <input type="password" maxlength="1" class="pin-digit" />
+          </div>
+          <div class="pin-error">Incorrect PIN. Please try again.</div>
+          <div style="display: flex; gap: 1rem; margin-top: 1rem">
+            <button
+              class="btn btn-outline"
+              style="flex: 1"
+              onclick="cancelPin()"
+            >
+              Cancel
+            </button>
+            <button class="btn" style="flex: 1" onclick="verifyPin()">
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="nav">
+      <button class="nav-button active" data-page="home">
+        <i data-feather="user"></i>
+        <span>Home</span>
+      </button>
+      <button class="nav-button" data-page="medications">
+        <i data-feather="package"></i>
+        <span>Medications</span>
+      </button>
+      <button class="nav-button" data-page="appointments">
+        <i data-feather="calendar"></i>
+        <span>Appointments</span>
+      </button>
+      <button class="nav-button" data-page="support">
+        <i data-feather="message-square"></i>
+        <span>Support</span>
+      </button>
+      <a href="SignIn.html"><button class="nav-button" data-page="signup" >
+        <i data-feather="user"></i>
+        <span>SignIn</span>
+      </button></a>
+    </nav>
+
+    <div class="container">
+      <div id="homePage" class="page active">
+        <div class="alert">
+          Welcome back! Your next medication pickup is scheduled for tomorrow.
+        </div>
+
+        <div class="card">
+          <div class="card-title">Today's Schedule</div>
+          <div class="item">
+            <i data-feather="package"></i>
+            <span class="sensitive-placeholder"
+              >Morning medication scheduled</span
+            >
+            <div class="sensitive-info">
+              <strong>Truvada</strong> - 8:00 AM
+              <div style="font-size: 0.875rem; color: #6b7280">
+                Take with food. Last taken: Yesterday 8:05 AM
+              </div>
+            </div>
+          </div>
+          <div class="item">
+            <i data-feather="package"></i>
+            <span class="sensitive-placeholder"
+              >Evening medication scheduled</span
+            >
+            <div class="sensitive-info">
+              <strong>Truvada</strong> - 8:00 PM
+              <div style="font-size: 0.875rem; color: #6b7280">
+                Take with food. Last taken: Yesterday 8:10 PM
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Health Status</div>
+          <div class="item">
+            <i data-feather="activity"></i>
+            <span class="sensitive-placeholder"
+              >Recent lab results available</span
+            >
+            <div class="sensitive-info">
+              CD4 Count: 750 cells/mm³ (↑ from last test)
+              <div style="font-size: 0.875rem; color: #6b7280">
+                Last tested: October 15, 2024
+              </div>
+            </div>
+          </div>
+          <div class="item">
+            <i data-feather="trending-up"></i>
+            <span class="sensitive-placeholder">Viral load information</span>
+            <div class="sensitive-info">
+              Viral Load: Undetectable
+              <div style="font-size: 0.875rem; color: #6b7280">
+                Maintained for 6 months
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Nearest Pickup Locations</div>
+          <div class="item">
+            <i data-feather="map-pin"></i>
+            <span class="sensitive-placeholder">Primary clinic location</span>
+            <div class="sensitive-info">
+              Youth Wellness Center
+              <div style="font-size: 0.875rem; color: #6b7280">
+                123 Health Street - 0.5 km
+                <br />Open until 5:00 PM
+              </div>
+            </div>
+          </div>
+          <div class="item">
+            <i data-feather="map-pin"></i>
+            <span class="sensitive-placeholder"
+              >Alternative pickup location</span
+            >
+            <div class="sensitive-info">
+              24/7 Medication Locker #A123
+              <div style="font-size: 0.875rem; color: #6b7280">
+                Central Station - 1.2 km
+                <br />Access code: 5521
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="medicationsPage" class="page">
+        <div class="card">
+          <div class="card-title">Medication Schedule</div>
+          <div class="item">
+            <i data-feather="package"></i>
+            <span class="sensitive-placeholder"
+              >Morning medication details</span
+            >
+            <div class="sensitive-info">
+              <div>
+                <strong>Truvada 200mg/300mg</strong>
+                <div style="font-size: 0.875rem; color: #6b7280">
+                  8:00 AM - Take with food
+                  <br />Remaining pills: 12 <br />Next refill: October 30, 2024
+                </div>
+              </div>
+            </div>
+            <button class="btn" style="width: auto">Mark taken</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Medication History</div>
+          <div class="sensitive-placeholder">
+            Sign in to view medication history
+          </div>
+          <div class="sensitive-info">
+            <div class="item">
+              <i data-feather="check-circle"></i>
+              Last 30 days adherence: 98%
+            </div>
+            <div class="item">
+              <i data-feather="alert-circle"></i>
+              Missed doses: 1
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="appointmentsPage" class="page">
+        <div class="card">
+          <div class="card-title">Upcoming Appointments</div>
+          <div class="item">
+            <i data-feather="calendar"></i>
+            <span class="sensitive-placeholder">Upcoming health check-up</span>
+            <div class="sensitive-info">
+              <div>
+                <strong>HIV Status Review</strong>
+                <div style="font-size: 0.875rem; color: #6b7280">
+                  October 25, 2024 - 10:00 AM
+                  <br />Dr. Sarah Johnson <br />Youth Wellness Center - Room 302
+                </div>
+              </div>
+            </div>
+            <button class="btn" style="width: auto">Reschedule</button>
+          </div>
+        </div>
+        <button class="btn">Schedule New Appointment</button>
+      </div>
+
+      <div id="supportPage" class="page">
+        <div class="card">
+          <div class="card-title">24/7 Support</div>
+          <button class="btn">
+            <i data-feather="message-square"></i>
+            Start Anonymous Chat
+          </button>
+          <button class="btn btn-outline">Call Support</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Resources</div>
+          <a href="#" class="item">
+            <span class="sensitive-placeholder"
+              >General health information</span
+            >
+            <div class="sensitive-info">
+              HIV Treatment Guidelines
+              <div style="font-size: 0.875rem; color: #6b7280">
+                Latest updates and recommendations
+              </div>
+            </div>
+          </a>
+          <a href="#" class="item">
+            <span class="sensitive-placeholder">Support groups</span>
+            <div class="sensitive-info">
+              AGYW Peer Support Network
+              <div style="font-size: 0.875rem; color: #6b7280">
+                Connect with other young women
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Feather Icons
+      feather.replace();
+
+      // Navigation
+      const navButtons = document.querySelectorAll(".nav-button");
+      const pages = document.querySelectorAll(".page");
+
+      navButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const pageId = button.getAttribute("data-page");
+
+          // Update navigation buttons
+          navButtons.forEach((btn) => btn.classList.remove("active"));
+          button.classList.add("active");
+
+          // Update pages
+          pages.forEach((page) => {
+            if (page.id === pageId + "Page") {
+              page.classList.add("active");
+            } else {
+              page.classList.remove("active");
+            }
+          });
+        });
+      });
+
+      // Privacy Mode
+      // const privacyToggle = document.getElementById("privacyToggle");
+      let privacyStatus = privacyToggle.querySelector(".privacy-status");
+
+      privacyToggle.addEventListener("click", () => {
+        privacyMode = !privacyMode;
+        document.body.classList.toggle("show-sensitive", privacyMode);
+        privacyToggle.querySelector("svg").style.color = privacyMode
+          ? "#3b82f6"
+          : "#6b7280";
+        privacyStatus.textContent = privacyMode
+          ? "Hide sensitive info"
+          : "Show sensitive info";
+      });
+
+      // Quick hide on Escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && privacyMode) {
+          privacyMode = false;
+          document.body.classList.remove("show-sensitive");
+          privacyToggle.querySelector("svg").style.color = "#6b7280";
+          privacyStatus.textContent = "Show sensitive info";
+        }
+      });
+    </script>
+    <script>
+      // Initialize Feather Icons
+      feather.replace();
+
+      // Previous navigation code remains the same...
+
+      // PIN verification
+      const CORRECT_PIN = "1234"; // In a real app, this would be securely stored/hashed
+      const pinModal = document.getElementById("pinModal");
+      const pinDigits = document.querySelectorAll(".pin-digit");
+      const pinError = document.querySelector(".pin-error");
+      let privacyMode = false;
+      const privacyToggle = document.getElementById("privacyToggle");
+
+      // Handle PIN input focus
+      pinDigits.forEach((digit, index) => {
+        digit.addEventListener("input", (e) => {
+          if (e.target.value.length === 1) {
+            if (index < pinDigits.length - 1) {
+              pinDigits[index + 1].focus();
+            }
+          }
+        });
+
+        digit.addEventListener("keydown", (e) => {
+          if (e.key === "Backspace" && !e.target.value && index > 0) {
+            pinDigits[index - 1].focus();
+          }
+        });
+      });
+
+      function showPinModal() {
+        pinModal.style.display = "flex";
+        pinDigits[0].focus();
+        // Clear previous input
+        pinDigits.forEach((digit) => (digit.value = ""));
+        pinError.style.display = "none";
+      }
+
+      function cancelPin() {
+        pinModal.style.display = "none";
+        privacyMode = false;
+        updatePrivacyUI();
+      }
+
+      function verifyPin() {
+        const enteredPin = Array.from(pinDigits)
+          .map((digit) => digit.value)
+          .join("");
+
+        if (enteredPin === CORRECT_PIN) {
+          pinModal.style.display = "none";
+          privacyMode = true;
+          updatePrivacyUI();
+        } else {
+          pinError.style.display = "block";
+          pinDigits.forEach((digit) => (digit.value = ""));
+          pinDigits[0].focus();
+        }
+      }
+
+      function updatePrivacyUI() {
+        document.body.classList.toggle("show-sensitive", privacyMode);
+        privacyToggle.querySelector("svg").style.color = privacyMode
+          ? "#3b82f6"
+          : "#6b7280";
+        privacyStatus.textContent = privacyMode
+          ? "Hide sensitive info"
+          : "Show sensitive info";
+      }
+
+      // Modified privacy toggle
+      privacyToggle.addEventListener("click", () => {
+        if (!privacyMode) {
+          showPinModal();
+        } else {
+          privacyMode = false;
+          updatePrivacyUI();
+        }
+      });
+
+      // Quick hide on Escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if (pinModal.style.display === "flex") {
+            cancelPin();
+          } else if (privacyMode) {
+            privacyMode = false;
+            updatePrivacyUI();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
